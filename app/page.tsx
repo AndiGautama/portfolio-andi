@@ -458,7 +458,7 @@ export default function Portfolio() {
               <div className="p-3 rounded-2xl bg-[#07130e] border border-[#d4af37]/30 flex justify-between items-center shadow-inner">
                 <span className="text-[#8fa89b] text-[11px]">Academic Honor:</span>
                 <span className="font-extrabold text-[#e6c762] text-sm">
-                  GPA 3.46 / 4.00 (Untar)
+                  GPA 3.46 / 4.00 (UNTAR)
                 </span>
               </div>
 
@@ -468,7 +468,7 @@ export default function Portfolio() {
                   Undergraduate at Universitas Tarumanagara specializing in{" "}
                   <span className="text-[#e6c762]">AI & Intelligent Systems</span>.
                   Experienced in maintaining enterprise B2B platforms
-                  (Ex-Indotrading Intern) with a portfolio of 25+ deployed
+                  (Ex-Indotrading Web Developer & Operations Intern) with a portfolio of 25+ deployed
                   applications.
                 </p>
                 <p>
