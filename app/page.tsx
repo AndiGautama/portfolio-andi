@@ -1,21 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Mail,
   Phone,
-  MapPin,
   Download,
   ExternalLink,
-  Sparkles,
   ArrowUpRight,
-  Layers,
   X,
   ChevronDown,
   Check,
-  FolderGit2,
-  Smartphone,
-  BrainCircuit,
-  Globe,
+  Gamepad2,
+  Trophy,
+  AlertCircle,
 } from "lucide-react";
 
 function GithubIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -38,14 +34,6 @@ function LinkedinIcon({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-function WhatsappIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.148-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-    </svg>
-  );
-}
-
 interface Project {
   num: string;
   title: string;
@@ -55,11 +43,9 @@ interface Project {
   description: string;
   details: string;
   tech: string[];
-  extraTechCount?: number;
   github: string;
-  accentGradient: string;
-  previewType: "web" | "mobile" | "nlp";
-  image?: string; 
+  thumbnail: string;
+  gallery: string[];
 }
 
 export default function Portfolio() {
@@ -68,32 +54,69 @@ export default function Portfolio() {
   const [showBioModal, setShowBioModal] = useState(false);
   const [introOpened, setIntroOpened] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [rotateStyle, setRotateStyle] = useState({
-    transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-  });
+
+  const [gameStarted, setGameStarted] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(20);
+  const [target, setTarget] = useState({ top: 50, left: 50, type: 'bug', id: 0 });
+  const [flash, setFlash] = useState<"red" | "green" | null>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameStarted && timeLeft > 0) {
+      timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+    } else if (timeLeft === 0) {
+      setGameStarted(false);
+    }
+    return () => clearTimeout(timer);
+  }, [gameStarted, timeLeft]);
+
+  useEffect(() => {
+    if (!gameStarted || timeLeft === 0) return;
+    const moveTimer = setInterval(() => {
+      spawnTarget();
+    }, 850);
+    return () => clearInterval(moveTimer);
+  }, [gameStarted, timeLeft]);
+
+  const spawnTarget = () => {
+    const isBug = Math.random() > 0.3;
+    setTarget({
+      top: Math.floor(Math.random() * 65) + 15,
+      left: Math.floor(Math.random() * 75) + 10,
+      type: isBug ? 'bug' : (Math.random() > 0.5 ? 'feature' : 'coffee'),
+      id: Date.now(),
+    });
+  };
+
+  const handleTargetClick = (type: string) => {
+    if (type === 'bug') {
+      setScore(s => s + 10);
+      triggerFlash("green");
+    } else {
+      setScore(s => s - 5);
+      triggerFlash("red");
+    }
+    spawnTarget();
+  };
+
+  const triggerFlash = (color: "red" | "green") => {
+    setFlash(color);
+    setTimeout(() => setFlash(null), 200);
+  };
+
+  const startGame = () => {
+    setScore(0);
+    setTimeLeft(20);
+    setGameStarted(true);
+    spawnTarget();
+  };
 
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
     message: "",
   });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    const rotateX = (-y / 12).toFixed(2);
-    const rotateY = (x / 12).toFixed(2);
-    setRotateStyle({
-      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setRotateStyle({
-      transform: "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)",
-    });
-  };
 
   const copyEmail = () => {
     navigator.clipboard.writeText("andigautama010@gmail.com");
@@ -103,12 +126,8 @@ export default function Portfolio() {
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent(
-      `Portfolio Inquiry from ${contactForm.name || "Visitor"}`
-    );
-    const body = encodeURIComponent(
-      `Name: ${contactForm.name}\nEmail: ${contactForm.email}\n\nMessage:\n${contactForm.message}`
-    );
+    const subject = encodeURIComponent(`Portfolio Message from ${contactForm.name} (${contactForm.email})`);
+    const body = encodeURIComponent(`Sender Name: ${contactForm.name}\nSender Email: ${contactForm.email}\n\nMessage:\n${contactForm.message}`);
     window.location.href = `mailto:andigautama010@gmail.com?subject=${subject}&body=${body}`;
   };
 
@@ -117,63 +136,94 @@ export default function Portfolio() {
   const projects: Project[] = [
     {
       num: "01",
-      title: "ActiveLab: Full-Stack Gym Membership & Booking Platform",
+      title: "ActiveLab: Gym Membership & Booking App",
       year: "2026",
-      category: "Web Apps",
-      role: "Full-Stack Developer",
-      description:
-        "Integrated web and mobile ecosystem allowing users to subscribe to gym memberships and schedule real-time class appointments across partner fitness centers.",
-      details:
-        "Developed as a comprehensive platform handling user authentication, subscription workflows, real-time class appointment scheduling, and gym partner database relations using Supabase, Next.js, and Express.js.",
-      tech: ["Next.js", "Express.js", "Supabase", "Flutter", "PostgreSQL", "REST API"],
+      category: "Mobile & UI/UX",
+      role: "Flutter Developer",
+      description: "Aplikasi mobile lintas platform untuk berlangganan gym dan booking kelas fitness secara real-time.",
+      details: "Dibangun menggunakan Flutter dan Dart. Mengintegrasikan sistem autentikasi, manajemen member, serta penjadwalan kelas fitness dengan UI yang bersih dan responsif.",
+      tech: ["Flutter", "Dart", "Supabase", "REST API"],
       github: "https://github.com/AndiGautama",
-      accentGradient: "from-[#143d2d] via-[#0d261c] to-[#07130e]",
-      previewType: "web",
+      thumbnail: "/activelab.png",
+      gallery: ["/activelab.png"],
     },
     {
       num: "02",
-      title: "Loyalty Marketplace: Cross-Platform Mobile Rewards App",
-      year: "2025",
-      category: "Mobile & UI/UX",
-      role: "Flutter Mobile Developer",
-      description:
-        "Cross-platform e-commerce application engineered in Android Studio with automated loyalty point calculations and an end-to-end reward redemption module.",
-      details:
-        "Built an intuitive mobile marketplace using Flutter and Dart. Designed custom algorithms to automatically calculate reward points per transaction and created smooth redemption workflows with GoRouter, Provider, and BLoC state management.",
-      tech: ["Flutter", "Dart", "BLoC / Provider", "GoRouter", "Android Studio"],
-      github: "https://github.com/AndiGautama",
-      accentGradient: "from-[#1e3a2f] via-[#0f291e] to-[#081610]",
-      previewType: "mobile",
-    },
-    {
-      num: "03",
-      title: "CareerLog: Interactive Job Application & Career Tracker",
-      year: "2025",
-      category: "Web Apps",
-      role: "Full-Stack Web Developer",
-      description:
-        "Interactive web platform integrated with public job APIs to track, manage, and organize job applications backed by a relational database.",
-      details:
-        "Engineered using Next.js and Prisma ORM with SQLite. Integrated external job listing APIs to fetch live job openings and streamline application status tracking for job seekers.",
-      tech: ["Next.js", "TypeScript", "Prisma ORM", "SQLite", "Bootstrap"],
-      github: "https://github.com/AndiGautama",
-      accentGradient: "from-[#292312] via-[#14261d] to-[#07130e]",
-      previewType: "web",
-    },
-    {
-      num: "04",
-      title: "E-Commerce Customer Review Sentiment Analysis Engine",
+      title: "E-Commerce Review Sentiment Analysis",
       year: "2026",
       category: "Systems & NLP",
       role: "AI & NLP Developer",
-      description:
-        "Natural Language Processing prototype utilizing TF-IDF vectorization and Cosine Similarity to evaluate customer review sentiments through an interactive UI.",
-      details:
-        "Built an NLP-based sentiment analysis model using Python and Scikit-Learn. Processed e-commerce customer feedback datasets and deployed an interactive chat interface.",
-      tech: ["Python", "NLP", "TF-IDF", "Scikit-Learn", "Cosine Similarity", "Gradio"],
+      description: "Sistem Natural Language Processing untuk mengevaluasi sentimen ulasan pelanggan e-commerce.",
+      details: "Memanfaatkan teknik TF-IDF vectorization dan Cosine Similarity menggunakan Python & Scikit-Learn untuk mengkategorikan ulasan produk secara otomatis.",
+      tech: ["Python", "NLP", "TF-IDF", "Scikit-Learn"],
       github: "https://github.com/AndiGautama",
-      accentGradient: "from-[#19382b] via-[#12241b] to-[#07130e]",
-      previewType: "nlp",
+      thumbnail: "/analisissentimen.png",
+      gallery: ["/analisissentimen.png"],
+    },
+    {
+      num: "03",
+      title: "NASA Astronomy Web Explorer",
+      year: "2025",
+      category: "Web Apps",
+      role: "Frontend Developer",
+      description: "Website eksplorasi luar angkasa interaktif yang mengambil data galaksi dan astronomi langsung dari API publik NASA.",
+      details: "Dibangun murni dengan HTML, CSS modern, dan JavaScript. Menampilkan gambar astronomi harian dan galeri kosmik dengan tata letak minimalis.",
+      tech: ["HTML5", "CSS3", "JavaScript", "NASA API"],
+      github: "https://github.com/AndiGautama",
+      thumbnail: "/astronomi.png",
+      gallery: ["/astronomi.png"],
+    },
+    {
+      num: "04",
+      title: "Roll-a-Ball Desktop Game",
+      year: "2025",
+      category: "Systems & NLP",
+      role: "Game Developer",
+      description: "Game klasik interaktif mengumpulkan koin dengan kontrol fisik bola yang mulus.",
+      details: "Dikembangkan menggunakan Android Studio / Game Engine untuk melatih logika pemrograman berorientasi objek dan penanganan event input pengguna.",
+      tech: ["Game Engine", "Android Studio", "Java / C#"],
+      github: "https://github.com/AndiGautama",
+      thumbnail: "/ballgame.png",
+      gallery: ["/ballgame.png"],
+    },
+    {
+      num: "05",
+      title: "Indonesian Nusantara Batik Gallery",
+      year: "2025",
+      category: "Web Apps",
+      role: "Web Designer & Developer",
+      description: "Katalog digital yang menampilkan ragam motif dan filosofi batik tradisional dari berbagai daerah di Indonesia.",
+      details: "Menyajikan informasi budaya lokal dengan desain galeri visual yang elegan dan informatif.",
+      tech: ["HTML5", "Tailwind CSS", "JavaScript"],
+      github: "https://github.com/AndiGautama",
+      thumbnail: "/batik1.png",
+      gallery: ["/batik1.png", "/batik2.png"],
+    },
+    {
+      num: "06",
+      title: "RestoBite: Admin & User Dining Platform",
+      year: "2025",
+      category: "Web Apps",
+      role: "Full-Stack PHP Developer",
+      description: "Website pemesanan makanan berbasis web dengan fitur CRUD lengkap dan autentikasi multi-role (Admin/User).",
+      details: "Admin dapat mengelola menu restoran (tambah/hapus/edit), sementara pelanggan dapat melakukan pemesanan langsung secara online.",
+      tech: ["PHP", "MySQL", "HTML/CSS", "Bootstrap"],
+      github: "https://github.com/AndiGautama",
+      thumbnail: "/restaurant.png",
+      gallery: ["/restaurant.png"],
+    },
+    {
+      num: "07",
+      title: "Scientific Web Calculator",
+      year: "2025",
+      category: "Web Apps",
+      role: "Frontend Developer",
+      description: "Kalkulator saintifik multifungsi untuk perhitungan matematika lanjutan.",
+      details: "Project iseng eksperimen fungsi matematika kompleks dengan antarmuka tombol responsif dan bersih.",
+      tech: ["HTML5", "CSS3", "JavaScript"],
+      github: "https://github.com/AndiGautama",
+      thumbnail: "/scienzetific.png",
+      gallery: ["/scienzetific.png"],
     },
   ];
 
@@ -182,588 +232,142 @@ export default function Portfolio() {
       ? projects
       : projects.filter((p) => p.category === activeCategory);
 
-  // Data Tech Stack & Tools beserta icon dari CDN Devicon (kecuali Vercel/Next.js/GitHub yg butuh filter invert agar terlihat di background gelap)
   const squareSkills = [
-    {
-      name: "JavaScript",
-      category: "Frontend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg",
-    },
-    {
-      name: "TypeScript",
-      category: "Frontend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg",
-    },
-    {
-      name: "HTML5",
-      category: "Frontend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg",
-    },
-    {
-      name: "CSS3",
-      category: "Frontend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg",
-    },
-    {
-      name: "React",
-      category: "Frontend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg",
-    },
-    {
-      name: "Next.js",
-      category: "Full-Stack",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg",
-      invert: true, // Karena logo asli warna hitam
-    },
-    {
-      name: "Node.js",
-      category: "Backend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg",
-    },
-    {
-      name: "PHP",
-      category: "Backend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg",
-    },
-    {
-      name: "Python",
-      category: "AI & Backend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg",
-    },
-    {
-      name: "Java",
-      category: "Backend",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg",
-    },
-    {
-      name: "Flutter",
-      category: "Mobile",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/flutter/flutter-original.svg",
-    },
-    {
-      name: "PostgreSQL",
-      category: "Database",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg",
-    },
-    {
-      name: "MongoDB",
-      category: "Database",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg",
-    },
-    {
-      name: "Supabase",
-      category: "Backend / DB",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg",
-    },
-    {
-      name: "Android Studio",
-      category: "Tool / IDE",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/androidstudio/androidstudio-original.svg",
-    },
-    {
-      name: "VS Code",
-      category: "Tool / IDE",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vscode/vscode-original.svg",
-    },
-    {
-      name: "Figma",
-      category: "Design",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/figma/figma-original.svg",
-    },
-    {
-      name: "GitHub",
-      category: "Version Control",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg",
-      invert: true,
-    },
-    {
-      name: "Vercel",
-      category: "Hosting / DevOps",
-      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg",
-      invert: true,
-    },
-  ];
-
-  const capabilityPills = [
-    "Full-Stack Web Architecture",
-    "RESTful API & Express.js",
-    "Cross-Platform Mobile (Flutter)",
-    "Natural Language Processing (TF-IDF, Cosine Similarity)",
-    "Database Schema & Indexing (PostgreSQL / Supabase / MongoDB)",
-    "Enterprise B2B Web Maintenance",
-    "Network Emulation & Linux Administration",
+    { name: "JavaScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" },
+    { name: "TypeScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" },
+    { name: "HTML5", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" },
+    { name: "CSS3", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" },
+    { name: "Tailwind", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" },
+    { name: "React", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" },
+    { name: "Next.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg", invert: true },
+    { name: "Node.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" },
+    { name: "PHP", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" },
+    { name: "Python", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" },
+    { name: "Flutter", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/flutter/flutter-original.svg" },
+    { name: "MongoDB", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" },
+    { name: "PostgreSQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg" },
+    { name: "MySQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" },
+    { name: "Supabase", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg" },
+    { name: "Android Studio", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/androidstudio/androidstudio-original.svg" },
+    { name: "Figma", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/figma/figma-original.svg" },
+    { name: "GitHub", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg", invert: true },
   ];
 
   return (
-    <div className="min-h-screen bg-[#07130e] text-[#f3f0e6] font-sans selection:bg-[#d4af37] selection:text-[#07130e] relative">
-      {/* 3D INTRO SHOWCASE (100dvw x 100dvh FULL SCREEN) */}
+    <div className="min-h-screen bg-[#050d0a] text-[#f3f0e6] font-sans selection:bg-[#d4af37] selection:text-[#050d0a] relative scroll-smooth">
       <div
-        className={`fixed inset-0 w-[100dvw] h-[100dvh] z-[60] bg-[#07130e] flex flex-col items-center justify-center p-4 transition-all duration-1000 ease-in-out overflow-hidden ${
-          introOpened
-            ? "-translate-y-full opacity-0 pointer-events-none"
-            : "translate-y-0 opacity-100"
+        className={`fixed inset-0 w-[100dvw] h-[100dvh] z-[60] bg-[#050d0a] flex flex-col items-center justify-center p-4 transition-transform duration-1000 ease-in-out ${
+          introOpened ? "-translate-y-full pointer-events-none" : "translate-y-0"
         }`}
       >
-        {/* BACKGROUND KARTU BUBBLE FULL MERATA */}
-        <div className="absolute inset-0 w-full h-full pointer-events-none select-none overflow-hidden flex flex-col justify-around py-2 opacity-90">
-          <div className="whitespace-nowrap animate-float-slow flex gap-5 w-full">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex gap-5 shrink-0">
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">📍 Cengkareng, Jakarta Barat</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">📧 andigautama010@gmail.com</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🎓 Universitas Tarumanagara</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🚀 Ready to Work - IT Intern</div>
-              </div>
-            ))}
+        <div className="relative z-10 text-center space-y-6 max-w-lg">
+          <div className="relative mx-auto w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1 bg-gradient-to-br from-[#d4af37] to-[#1c3b2e] shadow-2xl">
+            <img
+              src="/andi.png"
+              alt="Andi Gautama"
+              className="w-full h-full rounded-full object-cover border-4 border-[#050d0a]"
+              onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/150?text=AG"; }}
+            />
           </div>
 
-          <div className="whitespace-nowrap animate-float-slow-rev flex gap-5 w-full">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex gap-5 shrink-0">
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">💻 Tech: Next.js, Python, Flutter</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">📊 GPA: 3.46 / 4.00</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">💡 25+ Software Projects</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🚀 Seeking IT Internship</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="whitespace-nowrap animate-float-slow flex gap-5 w-full">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex gap-5 shrink-0">
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🛡️ Red Hat & GNS3 Networking</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">📱 Flutter Mobile App Developer</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🔍 Scikit-Learn & NLP Python</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">⚡ Supabase & PostgreSQL</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="whitespace-nowrap animate-float-slow-rev flex gap-5 w-full">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex gap-5 shrink-0">
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">⚡ ActiveLab Gym Booking Platform</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🛒 Loyalty Marketplace App</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🤖 Sentiment Analysis Chatbot</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🔥 TypeScript & Tailwind</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="whitespace-nowrap animate-float-slow flex gap-5 w-full">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex gap-5 shrink-0">
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">📍 West Jakarta, Indonesia</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">📞 +62 815-2700-5005</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">🎓 Computer Science Undergraduate</div>
-                <div className="px-5 py-2.5 rounded-2xl bg-[#0c241b]/95 border border-[#d4af37]/60 backdrop-blur-md shadow-2xl text-xs font-mono text-[#f8f6f0] flex items-center gap-2">⭐ Software Engineering Spec</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="absolute inset-0 w-full h-full bg-[#07130e]/45 pointer-events-none" />
-
-        <div className="relative z-10 text-center space-y-3 max-w-lg pt-2">
-          <div className="relative pt-3 pb-1 px-4 mx-auto w-fit">
-            <span className="absolute top-0.5 left-2 z-20 px-3 py-0.5 rounded-full bg-[#0c1f17] border border-[#d4af37]/60 text-[10px] font-bold text-[#e6c762] shadow-2xl animate-bounce">
-              ⚡ AI Spec
+          <div className="space-y-2">
+            <span className="text-[11px] uppercase tracking-[0.3em] text-[#d4af37] font-medium">
+              Portfolio 2026
             </span>
-            <span className="absolute bottom-0.5 right-2 z-20 px-3 py-0.5 rounded-full bg-[#0c1f17] border border-[#d4af37]/60 text-[10px] font-bold text-[#e6c762] shadow-2xl animate-pulse">
-              🚀 IT Intern
-            </span>
-
-            <div
-              onClick={() => setShowBioModal(true)}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-              style={rotateStyle}
-              className="relative w-44 h-52 sm:w-52 sm:h-60 rounded-3xl p-1.5 bg-gradient-to-br from-[#d4af37] via-[#133829] to-[#d4af37] shadow-2xl shadow-[#d4af37]/30 cursor-pointer transition-transform duration-200 ease-out group"
-              title="Click to View Bio Card"
-            >
-              <div className="w-full h-full rounded-[20px] bg-[#0c1f17] overflow-hidden flex items-center justify-center relative">
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                  <span className="px-3 py-1.5 rounded-xl bg-[#d4af37] text-[#07130e] text-xs font-bold shadow-lg">
-                    View Bio 🔍
-                  </span>
-                </div>
-                <img
-                  src="/andi.png"
-                  alt="Andi Gautama"
-                  className="w-full h-full object-cover object-center scale-100 group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-[#d4af37] font-bold">
-              Interactive Showcase
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#f8f6f0]">
+            <h1 className="text-3xl sm:text-5xl font-bold text-[#f8f6f0] tracking-tight">
               Andi Gautama
             </h1>
-            <p className="text-xs text-[#9eb5ab]">
-              IT Undergraduate at Universitas Tarumanagara
-            </p>
-            <p className="text-[10px] text-[#d4af37] italic">
-              (Click photo to open profile card)
+            <p className="text-sm text-[#8fa89b]">
+              Software & AI Engineer • West Jakarta
             </p>
           </div>
 
           <button
             onClick={() => setIntroOpened(true)}
-            className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#b89225] hover:from-[#e3c14d] hover:to-[#c9a12d] text-[#07130e] font-bold text-xs uppercase tracking-wider transition-all duration-300 hover:scale-105 shadow-xl shadow-[#d4af37]/25"
+            className="group mt-4 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#f3f0e6] text-[#050d0a] hover:bg-[#d4af37] font-semibold text-sm transition-all duration-300 shadow-lg"
           >
-            <span>Enter Portfolio Experience</span>
-            <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+            <span>View Portfolio</span>
+            <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
           </button>
         </div>
       </div>
 
-      {/* POP-UP MODAL BIODATA */}
-      {showBioModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-md p-5 sm:p-6 rounded-3xl bg-[#0e241b] border border-[#d4af37]/50 shadow-2xl space-y-4 text-left animate-scaleUp">
-            <button
-              onClick={() => setShowBioModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-xl bg-[#07130e] border border-[#1c3b2e] text-[#8fa89b] hover:text-white transition z-20"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-4 border-b border-[#1c3b2e] pb-4">
-              <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden border-2 border-[#d4af37] shadow-xl shrink-0 bg-[#07130e]">
-                <img
-                  src="/andi.png"
-                  alt="Andi Gautama"
-                  className="w-full h-full object-cover object-center"
-                />
-              </div>
-              <div className="space-y-1">
-                <span className="inline-block text-[9px] font-mono uppercase tracking-widest text-[#d4af37] px-2 py-0.5 rounded bg-[#d4af37]/10 border border-[#d4af37]/20">
-                  Verified Candidate
-                </span>
-                <h3 className="text-xl font-bold text-[#f8f6f0]">Andi Gautama</h3>
-                <p className="text-[11px] text-[#e6c762] font-medium leading-tight">
-                  Software Engineering & IT Intern Candidate
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2.5 text-xs text-[#a3b8ad] leading-relaxed">
-              <div className="p-3 rounded-2xl bg-[#07130e] border border-[#d4af37]/30 flex justify-between items-center shadow-inner">
-                <span className="text-[#8fa89b] text-[11px]">Academic Honor:</span>
-                <span className="font-extrabold text-[#e6c762] text-sm">
-                  GPA 3.46 / 4.00 (UNTAR)
-                </span>
-              </div>
-
-              <div className="space-y-1.5 text-[11px] sm:text-xs text-[#c5d6ce]">
-                <p>
-                  <strong className="text-[#f3f0e6]">Core Profile:</strong> IT
-                  Undergraduate at Universitas Tarumanagara specializing in{" "}
-                  <span className="text-[#e6c762]">AI & Intelligent Systems</span>.
-                  Experienced in maintaining enterprise B2B platforms
-                  (Ex-Indotrading Web Developer & Operations Intern) with a portfolio of 25+ deployed
-                  applications.
-                </p>
-                <p>
-                  <strong className="text-[#f3f0e6]">Status:</strong>{" "}
-                  <span className="text-[#e6c762]">Ready to work</span>, actively
-                  seeking an <span className="text-[#e6c762]">IT Internship</span>{" "}
-                  opportunity.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 pt-1 border-t border-[#1c3b2e]">
-              <p className="text-[10px] text-[#8fa89b] uppercase tracking-wider font-semibold">
-                Direct Access to Candidate:
-              </p>
-              <div className="grid grid-cols-4 gap-2">
-                <a
-                  href="https://wa.me/6281527005005"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center p-3 rounded-xl bg-[#07130e] hover:bg-[#133829] border border-[#d4af37]/40 text-[#d4af37] transition shadow-md hover:scale-105"
-                  title="WhatsApp"
-                >
-                  <WhatsappIcon className="w-5 h-5" />
-                </a>
-                <button
-                  onClick={copyEmail}
-                  className="relative flex items-center justify-center p-3 rounded-xl bg-[#07130e] hover:bg-[#133829] border border-[#d4af37]/40 text-[#d4af37] transition shadow-md hover:scale-105"
-                  title="Copy Email"
-                >
-                  {copied ? (
-                    <Check className="w-5 h-5 text-emerald-400" />
-                  ) : (
-                    <Mail className="w-5 h-5" />
-                  )}
-                  {copied && (
-                    <span className="absolute -top-8 px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold shadow-lg animate-fadeIn">
-                      Copied!
-                    </span>
-                  )}
-                </button>
-                <a
-                  href="https://www.linkedin.com/in/andi-gautama"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center p-3 rounded-xl bg-[#07130e] hover:bg-[#133829] border border-[#d4af37]/40 text-[#d4af37] transition shadow-md hover:scale-105"
-                  title="LinkedIn Profile"
-                >
-                  <LinkedinIcon className="w-5 h-5" />
-                </a>
-                <a
-                  href="https://github.com/AndiGautama"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center p-3 rounded-xl bg-[#07130e] hover:bg-[#133829] border border-[#d4af37]/40 text-[#d4af37] transition shadow-md hover:scale-105"
-                  title="GitHub Repositories"
-                >
-                  <GithubIcon className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-
-            <div className="pt-1">
-              <button
-                onClick={() => setShowBioModal(false)}
-                className="w-full py-3 rounded-xl bg-[#d4af37] hover:bg-[#e3c14d] text-[#07130e] font-bold text-xs uppercase tracking-wider transition shadow-lg"
-              >
-                Close Card
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BACKGROUND GLOWS */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-[#133829]/40 blur-[130px]" />
-        <div className="absolute top-1/3 -right-40 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-[#d4af37]/10 blur-[140px]" />
-      </div>
-
-      {/* FIXED FLOATING NAVBAR */}
-      <header className="fixed top-4 left-0 right-0 z-40 px-3 sm:px-6 pointer-events-none">
-        <div className="max-w-6xl mx-auto backdrop-blur-xl bg-[#0c1f17]/90 border border-[#d4af37]/30 rounded-2xl px-4 sm:px-6 py-3 flex justify-between items-center shadow-2xl shadow-black/80 pointer-events-auto">
-          <a href="#" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#d4af37] to-[#9a7b1c] flex items-center justify-center text-[#07130e] font-extrabold text-xs sm:text-sm shadow-md group-hover:scale-105 transition">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050d0a]/80 backdrop-blur-xl border-b border-[#1c3b2e] px-4 py-3">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <a href="#" className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#d4af37] flex items-center justify-center text-[#050d0a] font-bold text-sm">
               AG
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold tracking-wide text-xs sm:text-sm text-[#f3f0e6] leading-none">
-                Andi Gautama
-              </span>
-              <span className="text-[10px] text-[#8fa89b] font-mono">
-                Software & AI Engineer
-              </span>
-            </div>
+            <span className="font-semibold text-sm hidden sm:block">Andi Gautama</span>
           </a>
 
-          <nav className="hidden md:flex items-center space-x-1 bg-[#07130e]/60 p-1 rounded-xl border border-[#1c3b2e]">
-            <a
-              href="#projects"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#c5d6ce] hover:text-[#d4af37] hover:bg-[#0e241b] transition"
-            >
-              Works
-            </a>
-            <a
-              href="#skills"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#c5d6ce] hover:text-[#d4af37] hover:bg-[#0e241b] transition"
-            >
-              Toolkit
-            </a>
-            <a
-              href="#experience"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#c5d6ce] hover:text-[#d4af37] hover:bg-[#0e241b] transition"
-            >
-              Experience
-            </a>
-            <a
-              href="#contact"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#c5d6ce] hover:text-[#d4af37] hover:bg-[#0e241b] transition"
-            >
-              Contact
-            </a>
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-[#8fa89b]">
+            <a href="#projects" className="hover:text-[#d4af37] transition">Projects</a>
+            <a href="#skills" className="hover:text-[#d4af37] transition">Skills</a>
+            <a href="#minigame" className="hover:text-[#d4af37] transition flex items-center gap-1"><Gamepad2 className="w-4 h-4"/> Mini Game</a>
+            <a href="#experience" className="hover:text-[#d4af37] transition">Experience</a>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowBioModal(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#07130e] border border-[#1c3b2e] hover:border-[#d4af37]/50 text-[#e6c762] text-xs font-medium transition"
+              className="text-sm font-medium text-[#c5d6ce] hover:text-[#d4af37] transition"
             >
-              <span>Bio Card</span>
+              Profile
             </button>
             <a
               href="/CV-Andi-Gautama.pdf"
               download
-              className="flex items-center gap-1.5 bg-gradient-to-r from-[#d4af37] to-[#b89225] hover:from-[#e3c14d] hover:to-[#c9a12d] text-[#07130e] text-[11px] sm:text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl transition shadow-md"
+              className="flex items-center gap-1.5 bg-[#1c3b2e] hover:bg-[#d4af37] hover:text-[#050d0a] text-[#f3f0e6] text-xs font-semibold px-4 py-2 rounded-full transition"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>CV</span>
+              <Download className="w-3.5 h-3.5" /> CV
             </a>
           </div>
         </div>
       </header>
 
-      {/* MAIN WEBSITE CONTENT */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-28 pb-20 space-y-24 sm:space-y-32">
-        {/* HERO SECTION */}
-        <section className="grid lg:grid-cols-12 gap-6 items-stretch">
-          <div className="lg:col-span-7 flex flex-col justify-between p-6 sm:p-10 rounded-3xl bg-gradient-to-br from-[#0e241b]/95 via-[#0b1c15]/95 to-[#081510]/95 border border-[#d4af37]/20 shadow-2xl space-y-6">
-            <div className="space-y-4 sm:space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#e6c762] text-xs font-medium">
-                <Sparkles className="w-3.5 h-3.5" />
-                Ready to Work — Seeking IT Internship
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-[#8fa89b] font-semibold">
-                  Software & AI Engineering Portfolio
-                </p>
-                <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#f8f6f0] leading-[1.15]">
-                  Crafting Intelligent{" "}
-                  <span className="bg-gradient-to-r from-[#e6c762] via-[#d4af37] to-[#9dbf9e] bg-clip-text text-transparent">
-                    Digital Products
-                  </span>
-                  .
-                </h1>
-              </div>
-
-              <p className="text-[#a3b8ad] text-xs sm:text-sm leading-relaxed">
-                Hi, I&apos;m <strong className="text-[#f3f0e6]">Andi Gautama</strong> —
-                IT Undergraduate at{" "}
-                <span className="text-[#e6c762]">Universitas Tarumanagara</span>{" "}
-                specializing in AI, Full-Stack Web, and Flutter Mobile
-                Development.
-              </p>
-            </div>
-
-            <div className="space-y-4 pt-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="#projects"
-                  className="bg-[#d4af37] hover:bg-[#e3c14d] text-[#07130e] font-bold text-xs sm:text-sm px-5 py-3 rounded-xl transition flex items-center gap-1.5 shadow-lg"
-                >
-                  Explore Works <ArrowUpRight className="w-4 h-4" />
-                </a>
-                <a
-                  href="/CV-Andi-Gautama.pdf"
-                  download
-                  className="flex items-center gap-1.5 border border-[#d4af37]/30 hover:border-[#d4af37] bg-[#091812]/70 text-[#f3f0e6] px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold transition"
-                >
-                  <Download className="w-4 h-4 text-[#d4af37]" /> Download CV
-                </a>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-[#1c3b2e] text-[11px] sm:text-xs text-[#8fa89b]">
-                <a
-                  href="https://github.com/AndiGautama"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1.5 hover:text-[#e6c762] transition"
-                >
-                  <GithubIcon className="w-4 h-4 text-[#d4af37]" /> GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/andi-gautama"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1.5 hover:text-[#e6c762] transition"
-                >
-                  <LinkedinIcon className="w-4 h-4 text-[#d4af37]" /> LinkedIn
-                </a>
-              </div>
-            </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-32 pb-24 space-y-32">
+        <section className="flex flex-col items-center text-center space-y-6 pt-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0c1f17] border border-[#1c3b2e] text-[#d4af37] text-xs sm:text-sm font-medium">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Available for IT Internship & Software Roles
           </div>
 
-          {/* Right Bento Card */}
-          <div className="lg:col-span-5 flex flex-col justify-between">
-            <div className="p-6 sm:p-7 rounded-3xl bg-[#0c1f17]/90 border border-[#d4af37]/20 flex-1 flex flex-col justify-between space-y-5">
-              <div className="flex items-center justify-between border-b border-[#1c3b2e] pb-3">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#d4af37]" />
-                  <span className="text-xs uppercase tracking-widest text-[#d4af37] font-semibold">
-                    Executive Profile
-                  </span>
-                </div>
-                <span className="text-xs text-[#8fa89b] flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#d4af37]" /> Jakarta Barat
-                </span>
-              </div>
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight">
+            Building clean digital experiences and <span className="text-[#d4af37]">intelligent systems.</span>
+          </h1>
+          
+          <p className="text-[#8fa89b] text-base sm:text-lg max-w-2xl">
+            IT Undergraduate at Universitas Tarumanagara specializing in Full-Stack Web, Mobile Apps, and AI/NLP integration with 25+ built projects.
+          </p>
 
-              <div className="space-y-3 text-xs sm:text-sm">
-                <div className="flex justify-between items-center py-1 border-b border-[#153024]">
-                  <span className="text-[#8fa89b]">Focus</span>
-                  <span className="font-semibold text-[#f3f0e6]">
-                    AI & Intelligent Systems
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#153024]">
-                  <span className="text-[#8fa89b]">University</span>
-                  <span className="font-semibold text-[#f3f0e6]">Untar</span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#153024]">
-                  <span className="text-[#8fa89b]">GPA</span>
-                  <span className="font-bold text-[#e6c762]">3.46 / 4.00</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-[#8fa89b]">Experience</span>
-                  <span className="font-semibold text-[#f3f0e6]">
-                    B2B Tech Intern
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="p-3.5 rounded-2xl bg-[#07140f] border border-[#1c3b2e]">
-                  <div className="text-xl sm:text-2xl font-extrabold text-[#e6c762]">
-                    25+
-                  </div>
-                  <div className="text-[10px] sm:text-[11px] text-[#8fa89b]">
-                    Projects Built
-                  </div>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-[#07140f] border border-[#1c3b2e]">
-                  <div className="text-xl sm:text-2xl font-extrabold text-[#f8f6f0]">
-                    Full-Stack
-                  </div>
-                  <div className="text-[10px] sm:text-[11px] text-[#8fa89b]">
-                    Web, Mobile & AI
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center gap-4 pt-4">
+            <a href="#projects" className="bg-[#f3f0e6] text-[#050d0a] px-6 py-3 rounded-full font-semibold text-sm hover:bg-[#d4af37] transition">
+              See My Work
+            </a>
+            <a href="#contact" className="border border-[#1c3b2e] text-[#f3f0e6] px-6 py-3 rounded-full font-semibold text-sm hover:border-[#d4af37] transition">
+              Contact Me
+            </a>
           </div>
         </section>
 
-        {/* 2. FEATURED PROJECTS */}
-        <section id="projects" className="space-y-8 scroll-mt-28">
+        <section id="projects" className="space-y-10 scroll-mt-28">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-xs font-mono uppercase tracking-[0.2em] text-[#d4af37]">
-                SELECTED WORKS & CASE STUDIES
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f8f6f0] tracking-tight">
-                featured engineering projects.
-              </h2>
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Featured Projects</h2>
+              <p className="text-[#8fa89b] mt-1 text-sm">Click any card to inspect details and preview image galleries.</p>
             </div>
-
-            <div className="inline-flex flex-wrap items-center gap-1.5 p-1.5 rounded-full bg-[#0c1f17] border border-[#1c3b2e] w-fit">
+            
+            <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeCategory === cat
-                      ? "bg-[#d4af37] text-[#07130e] shadow-md"
-                      : "text-[#9eb5ab] hover:text-[#f8f6f0]"
+                  className={`px-4 py-1.5 rounded-full text-xs sm:text-sm transition ${
+                    activeCategory === cat ? "bg-[#d4af37] text-[#050d0a] font-semibold" : "bg-[#0c1f17] text-[#8fa89b] hover:text-[#f3f0e6]"
                   }`}
                 >
                   {cat}
@@ -772,496 +376,372 @@ export default function Portfolio() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-7 gap-y-12 pt-2">
-            {filteredProjects.map((project, index) => {
-              const visibleTech = project.tech.slice(0, 3);
-              const remainingCount = project.tech.length - visibleTech.length;
-
-              return (
-                <div
-                  key={index}
-                  onClick={() => setSelectedProject(project)}
-                  className="group cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="relative h-52 w-full rounded-2xl p-2.5 bg-[#0c1f17] border border-[#1c3b2e] group-hover:border-[#d4af37]/50 transition-all duration-300 shadow-xl overflow-hidden mb-5">
-                      <div
-                        className={`w-full h-full rounded-xl bg-gradient-to-br ${project.accentGradient} border border-[#1c3b2e]/80 flex flex-col justify-between p-4 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-500`}
-                      >
-                        <div className="flex items-center justify-between z-10">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#d4af37]/80" />
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#2a5946]" />
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#153024]" />
-                          </div>
-                          <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#07130e]/80 border border-[#d4af37]/30 text-[#e6c762]">
-                            {project.category}
-                          </span>
-                        </div>
-
-                        <div className="my-auto flex items-center justify-between gap-3 z-10 px-1">
-                          <div className="space-y-1.5 max-w-[75%]">
-                            <span className="text-[10px] font-mono text-[#8fa89b] uppercase tracking-widest">
-                              {project.role}
-                            </span>
-                            <div className="text-sm font-bold text-[#f8f6f0] line-clamp-2 leading-snug">
-                              {project.title.split(":")[0]}
-                            </div>
-                          </div>
-                          <div className="w-11 h-11 rounded-2xl bg-[#07130e]/90 border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37] shrink-0 shadow-lg group-hover:rotate-6 transition">
-                            {project.previewType === "web" && (
-                              <Globe className="w-5 h-5" />
-                            )}
-                            {project.previewType === "mobile" && (
-                              <Smartphone className="w-5 h-5" />
-                            )}
-                            {project.previewType === "nlp" && (
-                              <BrainCircuit className="w-5 h-5" />
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between text-[10px] font-mono text-[#8fa89b] pt-2 border-t border-white/5 z-10">
-                          <span>PROJECT #{project.num}</span>
-                          <span className="text-[#e6c762] group-hover:translate-x-1 transition-transform">
-                            Preview ↗
-                          </span>
-                        </div>
-
-                        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-[#d4af37]/15 blur-2xl pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div className="flex items-start justify-between gap-3 mb-2.5">
-                      <h3 className="text-lg font-bold text-[#f8f6f0] group-hover:text-[#e6c762] transition leading-snug">
-                        {project.title}
-                      </h3>
-                      <span className="shrink-0 px-2.5 py-0.5 rounded-full bg-[#0c1f17] border border-[#1c3b2e] text-[11px] font-mono text-[#9eb5ab]">
-                        {project.year}
-                      </span>
-                    </div>
-
-                    <p className="text-xs sm:text-[13px] text-[#9eb5ab] leading-relaxed line-clamp-3 mb-4">
-                      {project.description}
-                    </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProjects.map((project, index) => (
+              <div 
+                key={index} 
+                onClick={() => setSelectedProject(project)}
+                className="group cursor-pointer flex flex-col bg-[#0c1f17]/40 rounded-3xl border border-[#1c3b2e] overflow-hidden hover:border-[#d4af37]/50 transition-colors shadow-lg"
+              >
+                <div className="w-full h-52 bg-[#050d0a] overflow-hidden relative">
+                  <img 
+                    src={project.thumbnail} 
+                    alt={project.title} 
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                    onError={(e) => { e.currentTarget.src = `https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80`; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0c1f17] to-transparent opacity-60"></div>
+                  
+                  <div className="absolute top-4 left-4 flex gap-2">
+                    <span className="px-3 py-1 bg-[#050d0a]/80 backdrop-blur-md rounded-full text-[10px] font-semibold text-[#d4af37] uppercase tracking-wider">
+                      {project.category}
+                    </span>
                   </div>
+                </div>
 
-                  <div>
-                    <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                      {visibleTech.map((t, i) => (
-                        <span
-                          key={i}
-                          className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-[#0c1f17] border border-[#1c3b2e] text-[#c5d6ce]"
-                        >
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="text-lg font-bold text-[#f3f0e6] group-hover:text-[#d4af37] transition leading-snug mb-2">
+                    {project.title}
+                  </h3>
+                  
+                  <p className="text-[#8fa89b] text-xs mb-6 line-clamp-2">
+                    {project.description}
+                  </p>
+
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-[#1c3b2e]">
+                    <div className="flex flex-wrap gap-1">
+                      {project.tech.slice(0, 2).map((t, i) => (
+                        <span key={i} className="text-[11px] font-medium text-[#c5d6ce] bg-[#1c3b2e]/50 px-2 py-0.5 rounded-md border border-[#1c3b2e]">
                           {t}
                         </span>
                       ))}
-                      {remainingCount > 0 && (
-                        <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-[#0c1f17] border border-[#d4af37]/30 text-[#e6c762]">
-                          +{remainingCount}
-                        </span>
-                      )}
                     </div>
-
-                    <div className="pt-3 border-t border-[#153024] flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#f3f0e6] group-hover:text-[#d4af37] inline-flex items-center gap-1 transition">
-                        Read Case Study <ArrowUpRight className="w-3.5 h-3.5" />
-                      </span>
-
-                      <div
-                        className="flex items-center gap-2.5 text-[#8fa89b]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => setSelectedProject(project)}
-                          className="hover:text-[#d4af37] transition"
-                          title="Open Project Summary"
-                        >
-                          <FolderGit2 className="w-4 h-4" />
-                        </button>
-                        <a
-                          href={project.github}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="hover:text-[#d4af37] transition"
-                          title="External Link"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                        <a
-                          href={project.github}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="hover:text-[#d4af37] transition"
-                          title="GitHub Repository"
-                        >
-                          <GithubIcon className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
+                    
+                    <span className="text-xs text-[#d4af37] font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      Details <ArrowUpRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* 3. SKILLS & TOOLS (WITH SVG LOGOS) */}
-        <section id="skills" className="space-y-8 scroll-mt-28">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-xs font-mono uppercase tracking-[0.2em] text-[#d4af37]">
-                TOOLKIT & CAPABILITIES
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f8f6f0] tracking-tight">
-                tech stack & tools.
-              </h2>
+        <section id="minigame" className="p-8 sm:p-12 rounded-[2rem] bg-[#0c1f17] border border-[#1c3b2e] text-center relative overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#d4af37 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+          
+          <div className="max-w-2xl mx-auto space-y-4 relative z-10">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#050d0a] border border-[#d4af37]/30 text-[#e6c762] text-xs font-semibold">
+              <Gamepad2 className="w-4 h-4" /> Dev Simulator 2026
             </div>
-            <p className="text-xs sm:text-sm text-[#9eb5ab] max-w-md leading-relaxed">
-              Core technologies, programming languages, and engineering tools I use to build
-              scalable applications and intelligent systems.
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Catch the Bug!</h2>
+            <p className="text-sm text-[#8fa89b]">
+              Prove your debugging skills! Click the <span className="text-emerald-400 font-bold">Bug 🐛 (+10)</span> before it escapes. 
+              Don't squash the <span className="text-blue-400 font-bold">Feature 💡 (-5)</span> or spill the <span className="text-amber-600 font-bold">Coffee ☕ (-5)</span>!
             </p>
+
+            {!gameStarted && timeLeft === 20 && (
+              <button
+                onClick={startGame}
+                className="mt-4 px-8 py-3.5 bg-[#f3f0e6] hover:bg-[#d4af37] text-[#050d0a] font-bold text-sm rounded-full transition-colors shadow-lg"
+              >
+                Start Debugging
+              </button>
+            )}
+
+            {gameStarted && (
+              <div 
+                className={`relative h-64 sm:h-80 w-full bg-[#050d0a] rounded-2xl border-2 overflow-hidden my-6 transition-colors duration-200 ${flash === 'red' ? 'border-red-500/50 bg-red-950/20' : flash === 'green' ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#1c3b2e]'}`}
+              >
+                <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-center bg-gradient-to-b from-[#050d0a] to-transparent pointer-events-none">
+                  <div className="px-3 py-1 rounded-md bg-[#1c3b2e]/80 border border-[#1c3b2e] text-xs font-mono text-[#d4af37] font-bold">
+                    Score: {score}
+                  </div>
+                  <div className="px-3 py-1 rounded-md bg-[#1c3b2e]/80 border border-[#1c3b2e] text-xs font-mono text-[#f3f0e6] flex items-center gap-1.5">
+                    Time: <span className={timeLeft <= 5 ? "text-red-400 font-bold animate-pulse" : ""}>{timeLeft}s</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleTargetClick(target.type)}
+                  style={{ top: `${target.top}%`, left: `${target.left}%` }}
+                  className={`absolute p-2 sm:p-3 rounded-full shadow-2xl transform -translate-x-1/2 -translate-y-1/2 cursor-crosshair transition-all duration-300 ease-out active:scale-75 ${
+                    target.type === 'bug' ? 'text-3xl sm:text-4xl animate-pulse hover:bg-emerald-900/30' : 'text-3xl sm:text-4xl hover:bg-red-900/30'
+                  }`}
+                  title={target.type}
+                >
+                  {target.type === 'bug' && '🐛'}
+                  {target.type === 'feature' && '💡'}
+                  {target.type === 'coffee' && '☕'}
+                </button>
+              </div>
+            )}
+
+            {!gameStarted && timeLeft < 20 && (
+              <div className="space-y-4 pt-4">
+                <div className="p-6 rounded-2xl bg-[#050d0a] border border-[#d4af37]/40 max-w-sm mx-auto shadow-xl">
+                  <p className="text-xs font-mono text-[#8fa89b] mb-1">SESSION COMPLETE</p>
+                  <h3 className="text-2xl font-extrabold text-[#f3f0e6] mb-3">
+                    Final Score: <span className={score < 0 ? "text-red-400" : "text-[#d4af37]"}>{score}</span>
+                  </h3>
+                  
+                  {score > 100 ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-emerald-400 bg-emerald-950/40 p-2 rounded-lg">
+                      <Trophy className="w-4 h-4" /> Senior Debugger!
+                    </div>
+                  ) : score > 0 ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-[#d4af37] bg-[#d4af37]/10 p-2 rounded-lg">
+                      <Check className="w-4 h-4" /> Solid Code.
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 text-sm text-red-400 bg-red-950/40 p-2 rounded-lg">
+                      <AlertCircle className="w-4 h-4" /> Production Down!
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={startGame}
+                  className="px-6 py-2.5 bg-[#1c3b2e] hover:bg-[#d4af37] text-[#f3f0e6] hover:text-[#050d0a] font-bold text-xs rounded-full transition-colors"
+                >
+                  Play Again 🔄
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section id="skills" className="space-y-10 scroll-mt-28">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Toolkit</h2>
+            <p className="text-[#8fa89b] mt-1 text-sm">Languages and tools I use to build my projects.</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
             {squareSkills.map((item, idx) => (
               <div
                 key={idx}
-                className="group p-5 rounded-3xl bg-[#0c1f17]/85 border border-[#1c3b2e] hover:border-[#d4af37]/60 transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center text-center space-y-3 shadow-lg"
+                className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#0c1f17]/50 border border-[#1c3b2e] hover:bg-[#1c3b2e]/50 transition-colors gap-3"
               >
-                <div
-                  className="w-14 h-14 rounded-2xl bg-[#07130e] border border-[#1c3b2e] flex items-center justify-center shadow-md transform -rotate-3 group-hover:rotate-0 group-hover:scale-110 transition-all duration-300 overflow-hidden p-2"
-                >
-                  <img 
-                    src={item.icon} 
-                    alt={`${item.name} logo`} 
-                    className={`w-full h-full object-contain ${item.invert ? 'invert brightness-0 opacity-80' : ''}`}
-                  />
-                </div>
-
-                <div className="space-y-0.5 pt-1">
-                  <h3 className="text-sm font-bold text-[#f8f6f0] group-hover:text-[#e6c762] transition">
-                    {item.name}
-                  </h3>
-                  <p className="text-[11px] font-mono text-[#8fa89b]">
-                    {item.category}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap gap-2.5 pt-2">
-            {capabilityPills.map((pill, i) => (
-              <div
-                key={i}
-                className="px-4 py-2 rounded-full bg-[#0c1f17]/90 border border-[#1c3b2e] hover:border-[#d4af37]/40 text-xs text-[#c5d6ce] flex items-center gap-2 transition"
-              >
-                <span className="text-[#d4af37] text-sm leading-none">✦</span>
-                <span>{pill}</span>
+                <img 
+                  src={item.icon} 
+                  alt={item.name} 
+                  className={`w-9 h-9 object-contain ${item.invert ? 'invert brightness-0 opacity-90' : ''}`}
+                />
+                <span className="text-[11px] font-medium text-[#c5d6ce]">{item.name}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* 4. EXPERIENCE */}
-        <section id="experience" className="space-y-8 scroll-mt-28">
-          <div className="space-y-1 border-b border-[#1c3b2e] pb-4">
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-[#d4af37]">
-              CAREER & ACADEMIC JOURNEY
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f8f6f0] tracking-tight">
-              work experience.
-            </h2>
+        <section id="experience" className="space-y-10 scroll-mt-28">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Experience</h2>
           </div>
 
-          <div className="space-y-6 border-l-2 border-[#d4af37]/30 ml-3 pl-6">
-            <div className="relative p-6 rounded-3xl bg-[#0c1f17]/75 border border-[#1c3b2e] space-y-3">
-              <div className="absolute -left-[31px] top-6 w-3.5 h-3.5 rounded-full bg-[#d4af37] border-4 border-[#07130e]" />
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-                <h3 className="text-lg sm:text-xl font-bold text-[#f8f6f0]">
-                  Web Developer & Operations Intern
-                </h3>
-                <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#d4af37]/10 text-[#e6c762] w-fit">
-                  May 2022 – Oct 2022
-                </span>
+          <div className="space-y-8 pl-4 border-l border-[#1c3b2e]">
+            <div className="relative pl-6">
+              <div className="absolute w-3 h-3 bg-[#d4af37] rounded-full -left-[6.5px] top-1.5" />
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1">
+                <h3 className="text-lg font-bold text-[#f3f0e6]">Web Developer & Operations Intern</h3>
+                <span className="text-xs text-[#8fa89b] font-mono mt-1 sm:mt-0">May 2022 – Oct 2022</span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-[#8fa89b]">
-                PT. Inovasi Sukses Sentosa (Indotrading.com & Kikayu.com) — Jakarta
-              </p>
-              <ul className="list-disc list-inside text-xs sm:text-sm text-[#a3b8ad] space-y-1.5 pt-1 leading-relaxed">
-                <li>
-                  Contributed to development and deployment of Indotrading B2B
-                  enterprise e-commerce platform.
-                </li>
-                <li>
-                  Performed website maintenance, bug fixes, and performance
-                  optimization for platform uptime.
-                </li>
-                <li>
-                  Managed product databases and inventory systems, updating B2B
-                  stock levels and pricing accurately.
-                </li>
+              <p className="text-sm font-medium text-[#d4af37] mb-3">PT. Inovasi Sukses Sentosa (Indotrading.com) — Jakarta</p>
+              <ul className="list-disc list-inside text-xs sm:text-sm text-[#8fa89b] space-y-1">
+                <li>Contributed to development and deployment of B2B enterprise e-commerce platform.</li>
+                <li>Performed website maintenance, bug fixes, and database inventory management.</li>
               </ul>
             </div>
 
-            <div className="relative p-6 rounded-3xl bg-[#0c1f17]/75 border border-[#1c3b2e] space-y-3">
-              <div className="absolute -left-[31px] top-6 w-3.5 h-3.5 rounded-full bg-[#2a5946] border-4 border-[#07130e]" />
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-                <h3 className="text-lg sm:text-xl font-bold text-[#f8f6f0]">
-                  Event Service Staff
-                </h3>
-                <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#153024] text-[#9eb5ab] w-fit">
-                  Jun 2026 – Jul 2026
-                </span>
+            <div className="relative pl-6">
+              <div className="absolute w-3 h-3 bg-[#1c3b2e] rounded-full -left-[6.5px] top-1.5" />
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1">
+                <h3 className="text-lg font-bold text-[#f3f0e6]">Event Service Staff</h3>
+                <span className="text-xs text-[#8fa89b] font-mono mt-1 sm:mt-0">Jun 2026 – Jul 2026</span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-[#8fa89b]">
-                PT Jakarana Tama (Mie Gaga - Jakarta Fair) — Jakarta
-              </p>
-              <ul className="list-disc list-inside text-xs sm:text-sm text-[#a3b8ad] space-y-1.5 pt-1 leading-relaxed">
-                <li>
-                  Delivered customer service by serving orders efficiently with a
-                  welcoming attitude to visitors.
-                </li>
-                <li>
-                  Maintained high standards of booth hygiene and operational
-                  cleanliness through daily schedules.
-                </li>
+              <p className="text-sm font-medium text-[#d4af37] mb-3">PT Jakarana Tama (Mie Gaga - Jakarta Fair) — Jakarta</p>
+              <ul className="list-disc list-inside text-xs sm:text-sm text-[#8fa89b] space-y-1">
+                <li>Delivered customer service and handled operations for visitors at JIExpo Kemayoran.</li>
               </ul>
             </div>
           </div>
         </section>
 
-        {/* 5. CONTACT SECTION */}
-        <section
-          id="contact"
-          className="p-8 sm:p-14 rounded-[32px] bg-gradient-to-br from-[#0e241b] via-[#0a1b14] to-[#07130e] border border-[#d4af37]/30 shadow-2xl scroll-mt-28"
-        >
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-            <div className="lg:col-span-6 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#07130e] border border-[#d4af37]/30 text-xs text-[#e6c762] font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Available for internships & projects
-              </div>
-
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f8f6f0] leading-[1.15] tracking-tight">
-                always searching for new problems, fun teams and great ideas.
-              </h2>
-
-              <p className="text-xs sm:text-sm text-[#9eb5ab] leading-relaxed">
-                have a project idea, internship opportunity, or just want to
-                discuss software engineering, NLP, or full-stack development?
-                drop a note or reach out directly.
+        <section id="contact" className="py-10 border-t border-[#1c3b2e] scroll-mt-28">
+          <div className="grid md:grid-cols-2 gap-12">
+            <div>
+              <h2 className="text-3xl font-bold mb-4">Let's connect.</h2>
+              <p className="text-[#8fa89b] text-sm leading-relaxed mb-6">
+                Fill out the form to send an email directly to my inbox (`andigautama010@gmail.com`).
               </p>
-
-              <div className="space-y-3 pt-2 text-xs sm:text-sm">
-                <a
-                  href="https://github.com/AndiGautama"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 text-[#c5d6ce] hover:text-[#e6c762] transition w-fit"
-                >
-                  <GithubIcon className="w-4 h-4 text-[#d4af37]" />
-                  <span>github.com/AndiGautama</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+              
+              <div className="space-y-4">
+                <a href="mailto:andigautama010@gmail.com" className="flex items-center gap-3 text-sm text-[#f3f0e6] hover:text-[#d4af37] transition w-fit">
+                  <Mail className="w-5 h-5 text-[#8fa89b]" /> andigautama010@gmail.com
                 </a>
-
-                <a
-                  href="mailto:andigautama010@gmail.com"
-                  className="flex items-center gap-3 text-[#c5d6ce] hover:text-[#e6c762] transition w-fit"
-                >
-                  <Mail className="w-4 h-4 text-[#d4af37]" />
-                  <span>andigautama010@gmail.com</span>
+                <a href="https://wa.me/6281527005005" target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm text-[#f3f0e6] hover:text-[#d4af37] transition w-fit">
+                  <Phone className="w-5 h-5 text-[#8fa89b]" /> +62 815-2700-5005
                 </a>
-
-                <a
-                  href="https://wa.me/6281527005005"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 text-[#c5d6ce] hover:text-[#e6c762] transition w-fit"
-                >
-                  <Phone className="w-4 h-4 text-[#d4af37]" />
-                  <span>+62 815-2700-5005 (WhatsApp)</span>
+                <a href="https://github.com/AndiGautama" target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm text-[#f3f0e6] hover:text-[#d4af37] transition w-fit">
+                  <GithubIcon className="w-5 h-5 text-[#8fa89b]" /> github.com/AndiGautama
                 </a>
-              </div>
-
-              <div className="pt-4 border-t border-[#1c3b2e]">
-                <p className="text-xs italic text-[#8fa89b] font-serif">
-                  Powered by Next.js & TypeScript — engineered in West Jakarta.
-                </p>
               </div>
             </div>
 
-            <form
-              onSubmit={handleContactSubmit}
-              className="lg:col-span-6 space-y-7 lg:pl-4 pt-2"
-            >
-              <div>
-                <input
-                  type="text"
-                  required
-                  placeholder="name [or nickname, we don't judge]"
-                  value={contactForm.name}
-                  onChange={(e) =>
-                    setContactForm({ ...contactForm, name: e.target.value })
-                  }
-                  className="w-full bg-transparent border-b border-[#1c3b2e] focus:border-[#d4af37] py-3 text-sm text-[#f8f6f0] placeholder-[#6c877b] focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <input
-                  type="email"
-                  required
-                  placeholder="e-mail address"
-                  value={contactForm.email}
-                  onChange={(e) =>
-                    setContactForm({ ...contactForm, email: e.target.value })
-                  }
-                  className="w-full bg-transparent border-b border-[#1c3b2e] focus:border-[#d4af37] py-3 text-sm text-[#f8f6f0] placeholder-[#6c877b] focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="tell me about your project, internship role, or questions..."
-                  value={contactForm.message}
-                  onChange={(e) =>
-                    setContactForm({ ...contactForm, message: e.target.value })
-                  }
-                  className="w-full bg-transparent border-b border-[#1c3b2e] focus:border-[#d4af37] py-3 text-sm text-[#f8f6f0] placeholder-[#6c877b] focus:outline-none transition resize-none"
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#d4af37] hover:bg-[#e3c14d] text-[#07130e] font-bold text-xs sm:text-sm tracking-wide transition shadow-xl shadow-[#d4af37]/20 hover:scale-[1.02]"
-                >
-                  <span>send message →</span>
-                </button>
-              </div>
+            <form onSubmit={handleContactSubmit} className="space-y-6">
+              <input
+                type="text"
+                required
+                placeholder="Your Name"
+                value={contactForm.name}
+                onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                className="w-full bg-[#0c1f17] border border-[#1c3b2e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition"
+              />
+              <input
+                type="email"
+                required
+                placeholder="Your Email Address"
+                value={contactForm.email}
+                onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                className="w-full bg-[#0c1f17] border border-[#1c3b2e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition"
+              />
+              <textarea
+                rows={4}
+                required
+                placeholder="Your Message / Inquiry..."
+                value={contactForm.message}
+                onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                className="w-full bg-[#0c1f17] border border-[#1c3b2e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition resize-none"
+              />
+              <button
+                type="submit"
+                className="bg-[#f3f0e6] text-[#050d0a] font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#d4af37] transition w-full sm:w-auto flex items-center justify-center gap-2"
+              >
+                <span>Send Email to Andi</span> <ArrowUpRight className="w-4 h-4" />
+              </button>
             </form>
           </div>
         </section>
       </main>
 
-      {/* POP-UP MODAL PROJECT CASE STUDY */}
       {selectedProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-[#0e241b] border border-[#d4af37]/40 shadow-2xl space-y-6 text-left animate-scaleUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050d0a]/90 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0c1f17] border border-[#1c3b2e] p-6 sm:p-8 shadow-2xl custom-scrollbar">
             <button
               onClick={() => setSelectedProject(null)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-[#07130e] border border-[#1c3b2e] text-[#8fa89b] hover:text-white transition"
+              className="absolute top-4 right-4 p-2 bg-[#050d0a] rounded-full text-[#8fa89b] hover:text-[#f3f0e6] transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-[#d4af37] px-2.5 py-1 rounded-md bg-[#d4af37]/10 border border-[#d4af37]/20">
-                  Case Study {selectedProject.num}
-                </span>
-                <span className="text-xs font-mono text-[#8fa89b]">
-                  • {selectedProject.year}
-                </span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#f8f6f0] pt-1">
+            <div className="mb-6">
+              <span className="text-xs font-semibold text-[#d4af37] uppercase tracking-wider">
+                {selectedProject.category} • {selectedProject.year}
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-bold text-[#f3f0e6] mt-1 mb-2">
                 {selectedProject.title}
               </h3>
-              <p className="text-xs text-[#e6c762] font-semibold uppercase tracking-wider">
-                {selectedProject.role}
-              </p>
+              <p className="text-sm text-[#8fa89b]">{selectedProject.description}</p>
             </div>
 
-            <div className="space-y-3 text-xs sm:text-sm text-[#a3b8ad] leading-relaxed border-t border-b border-[#1c3b2e] py-4">
-              <p>
-                <strong className="text-[#f3f0e6]">Overview:</strong>{" "}
-                {selectedProject.description}
-              </p>
-              <p>
-                <strong className="text-[#f3f0e6]">Architecture & Details:</strong>{" "}
+            <div className={`grid gap-4 mb-6 ${selectedProject.gallery.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+              {selectedProject.gallery.map((imgSrc, idx) => (
+                <div key={idx} className={`w-full ${selectedProject.gallery.length === 1 ? 'h-64 sm:h-96' : 'h-48'} rounded-2xl bg-[#050d0a] border border-[#1c3b2e] overflow-hidden`}>
+                  <img 
+                    src={imgSrc} 
+                    alt={`Gallery ${idx + 1}`} 
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    onError={(e) => { e.currentTarget.src = `https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80`; }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <h4 className="font-semibold text-[#f3f0e6]">About the Project</h4>
+              <p className="text-sm text-[#8fa89b] leading-relaxed">
                 {selectedProject.details}
               </p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs text-[#8fa89b] uppercase tracking-wider font-semibold">
-                Technologies Used:
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedProject.tech.map((item, i) => (
-                  <span
-                    key={i}
-                    className="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-[#07130e] border border-[#d4af37]/25 text-[#e6c762]"
-                  >
-                    {item}
-                  </span>
-                ))}
+              
+              <div className="pt-2">
+                <h4 className="font-semibold text-[#f3f0e6] mb-2 text-sm">Tech Stack</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedProject.tech.map((item, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 text-xs font-medium rounded-full bg-[#1c3b2e] text-[#c5d6ce]"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="pt-2 flex items-center gap-3">
+            <div className="flex justify-end pt-4 border-t border-[#1c3b2e]">
               <a
                 href={selectedProject.github}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 bg-[#d4af37] hover:bg-[#e3c14d] text-[#07130e] font-bold text-xs sm:text-sm py-3 rounded-xl transition shadow-md"
+                className="flex items-center gap-2 bg-[#f3f0e6] hover:bg-[#d4af37] text-[#050d0a] font-semibold text-sm px-6 py-2.5 rounded-full transition"
               >
-                <GithubIcon className="w-4 h-4" /> View Repository on GitHub
+                <GithubIcon className="w-4 h-4" /> View Repository
               </a>
             </div>
           </div>
         </div>
       )}
 
-      {/* CSS ANIMATION */}
+      {showBioModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050d0a]/90 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm rounded-3xl bg-[#0c1f17] border border-[#1c3b2e] p-6 shadow-2xl">
+            <button
+              onClick={() => setShowBioModal(false)}
+              className="absolute top-4 right-4 p-2 bg-[#050d0a] rounded-full text-[#8fa89b] hover:text-[#f3f0e6] transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex flex-col items-center text-center mt-4 mb-6">
+              <img src="/andi.png" alt="Andi" className="w-24 h-24 rounded-full object-cover border-2 border-[#d4af37] mb-4" onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/150"; }} />
+              <h3 className="text-xl font-bold text-[#f3f0e6]">Andi Gautama</h3>
+              <p className="text-sm text-[#d4af37] mt-1">GPA 3.46 / 4.00 (Untar)</p>
+            </div>
+
+            <p className="text-sm text-[#8fa89b] text-center mb-6 leading-relaxed">
+              Seeking an IT Internship. Experienced in maintaining enterprise B2B platforms with a portfolio of 25+ deployed applications.
+            </p>
+
+            <div className="flex justify-center gap-3">
+              <button onClick={copyEmail} className="p-3 rounded-full bg-[#1c3b2e] text-[#f3f0e6] hover:bg-[#d4af37] hover:text-[#050d0a] transition relative">
+                {copied ? <Check className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+              </button>
+              <a href="https://wa.me/6281527005005" target="_blank" rel="noreferrer" className="p-3 rounded-full bg-[#1c3b2e] text-[#f3f0e6] hover:bg-[#d4af37] hover:text-[#050d0a] transition">
+                <Phone className="w-5 h-5" />
+              </a>
+              <a href="https://www.linkedin.com/in/andi-gautama" target="_blank" rel="noreferrer" className="p-3 rounded-full bg-[#1c3b2e] text-[#f3f0e6] hover:bg-[#d4af37] hover:text-[#050d0a] transition">
+                <LinkedinIcon className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
-        @keyframes floatMarquee {
-          0% {
-            transform: translateX(0%);
-          }
-          100% {
-            transform: translateX(-33.333%);
-          }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
         }
-        @keyframes floatMarqueeRev {
-          0% {
-            transform: translateX(-33.333%);
-          }
-          100% {
-            transform: translateX(0%);
-          }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
         }
-        @keyframes scaleUp {
-          0% {
-            opacity: 0;
-            transform: scale(0.85);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-float-slow {
-          display: flex;
-          width: 300%;
-          animation: floatMarquee 40s linear infinite;
-        }
-        .animate-float-slow-rev {
-          display: flex;
-          width: 300%;
-          animation: floatMarqueeRev 40s linear infinite;
-        }
-        .animate-scaleUp {
-          animation: scaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #1c3b2e;
+          border-radius: 10px;
         }
       `}</style>
-
-      <footer className="border-t border-[#153024] py-8 text-center text-xs text-[#6c877b]">
-        © 2026 Andi Gautama — Portfolio Website
+      
+      <footer className="border-t border-[#1c3b2e] py-8 text-center text-xs text-[#8fa89b]">
+        © 2026 Andi Gautama. Crafted with Next.js & Tailwind CSS.
       </footer>
     </div>
   );
