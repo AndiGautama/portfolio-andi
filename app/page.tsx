@@ -222,8 +222,8 @@ export default function Portfolio() {
       details: "Project iseng eksperimen fungsi matematika kompleks dengan antarmuka tombol responsif dan bersih.",
       tech: ["HTML5", "CSS3", "JavaScript"],
       github: "https://github.com/AndiGautama",
-      thumbnail: "/scienzetific.png",
-      gallery: ["/scienzetific.png"],
+      thumbnail: "/sciencetific.png",
+      gallery: ["/sciencetific.png"],
     },
   ];
 
